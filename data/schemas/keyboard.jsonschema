@@ -70,6 +70,9 @@
                 "MK64FX512",
                 "MK66FX1M0",
                 "RP2040",
+                "SN32F248F",
+                "SN32F248BF",
+                "SN32F268F",
                 "STM32F042",
                 "STM32F072",
                 "STM32F103",
@@ -223,7 +226,8 @@
                 "uf2boot",
                 "unknown",
                 "usbasploader",
-                "wb32-dfu"
+                "wb32-dfu",
+                "sn32-dfu"
             ]
         },
         "bootloader_instructions": {
@@ -300,7 +304,7 @@
                     "properties": {
                         "driver": {
                             "type": "string",
-                            "enum": ["custom", "embedded_flash", "legacy", "rp2040_flash", "spi_flash"]
+                            "enum": ["custom", "embedded_flash", "legacy", "rp2040_flash", "spi_flash", "sn32_flash"]
                         },
                         "backing_size": {"$ref": "qmk.definitions.v1#/unsigned_int"},
                         "logical_size": {"$ref": "qmk.definitions.v1#/unsigned_int"}

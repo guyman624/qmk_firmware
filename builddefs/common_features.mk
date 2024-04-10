@@ -233,6 +233,9 @@ else
         # Teensy EEPROM implementations
         OPT_DEFS += -DEEPROM_KINETIS_FLEXRAM
         SRC += eeprom_kinetis_flexram.c
+      else ifneq ($(filter $(MCU_SERIES),SN32F240B SN32F260),)
+        OPT_DEFS += -DEEPROM_DRIVER -DEEPROM_SN32_FLASH_EMULATED
+        SRC += eeprom_driver.c eeprom_sn32.c
       else
         # Fall back to transient, i.e. non-persistent
         OPT_DEFS += -DEEPROM_DRIVER -DEEPROM_TRANSIENT
@@ -250,7 +253,7 @@ else
   endif
 endif
 
-VALID_WEAR_LEVELING_DRIVER_TYPES := custom embedded_flash spi_flash rp2040_flash legacy
+VALID_WEAR_LEVELING_DRIVER_TYPES := custom embedded_flash spi_flash rp2040_flash legacy sn32_flash
 WEAR_LEVELING_DRIVER ?= none
 ifneq ($(strip $(WEAR_LEVELING_DRIVER)),none)
   ifeq ($(filter $(WEAR_LEVELING_DRIVER),$(VALID_WEAR_LEVELING_DRIVER_TYPES)),)
@@ -278,6 +281,9 @@ ifneq ($(strip $(WEAR_LEVELING_DRIVER)),none)
       COMMON_VPATH += $(PLATFORM_PATH)/$(PLATFORM_KEY)/$(DRIVER_DIR)/flash
       SRC += legacy_flash_ops.c wear_leveling_legacy.c
       POST_CONFIG_H += $(PLATFORM_PATH)/$(PLATFORM_KEY)/$(DRIVER_DIR)/wear_leveling/wear_leveling_legacy_config.h
+    else ifeq ($(strip $(WEAR_LEVELING_DRIVER)), sn32_flash)
+      SRC += wear_leveling_sn32_flash.c
+      POST_CONFIG_H += $(PLATFORM_PATH)/$(PLATFORM_KEY)/$(DRIVER_DIR)/wear_leveling/wear_leveling_sn32_flash_config.h
     endif
   endif
 endif
@@ -443,7 +449,7 @@ endif
 
 RGB_MATRIX_ENABLE ?= no
 
-VALID_RGB_MATRIX_TYPES := aw20216s is31fl3218 is31fl3729 is31fl3731 is31fl3733 is31fl3736 is31fl3737 is31fl3741 is31fl3742a is31fl3743a is31fl3745 is31fl3746a snled27351 ws2812 custom
+VALID_RGB_MATRIX_TYPES := aw20216s is31fl3218 is31fl3729 is31fl3731 is31fl3733 is31fl3736 is31fl3737 is31fl3741 is31fl3742a is31fl3743a is31fl3745 is31fl3746a snled27351 ws2812 sn32f24xb sled1734x custom
 ifeq ($(strip $(RGB_MATRIX_ENABLE)), yes)
     ifeq ($(filter $(RGB_MATRIX_DRIVER),$(VALID_RGB_MATRIX_TYPES)),)
         $(call CATASTROPHIC_ERROR,Invalid RGB_MATRIX_DRIVER,RGB_MATRIX_DRIVER="$(RGB_MATRIX_DRIVER)" is not a valid matrix type)
@@ -540,12 +546,24 @@ ifeq ($(strip $(RGB_MATRIX_ENABLE)), yes)
         SRC += snled27351.c
     endif
 
+    ifeq ($(strip $(RGB_MATRIX_DRIVER)), sled1734x)
+        I2C_DRIVER_REQUIRED = yes
+        COMMON_VPATH += $(DRIVER_PATH)/led
+        SRC += sled1734x.c
+    endif
+
     ifeq ($(strip $(RGB_MATRIX_DRIVER)), ws2812)
         WS2812_DRIVER_REQUIRED := yes
     endif
 
     ifeq ($(strip $(RGB_MATRIX_DRIVER)), apa102)
         APA102_DRIVER_REQUIRED := yes
+    endif
+
+    ifeq ($(strip $(RGB_MATRIX_DRIVER)), sn32f24xb)
+        OPT_DEFS += -DSHARED_MATRIX
+        COMMON_VPATH += $(DRIVER_PATH)/led/sn32
+        SRC += rgb_matrix_sn32f24xb.c
     endif
 
     ifeq ($(strip $(RGB_MATRIX_CUSTOM_KB)), yes)
